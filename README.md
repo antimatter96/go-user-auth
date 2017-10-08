@@ -1,1 +1,1 @@
-# go-user-auth
+## Example User Management for Go
