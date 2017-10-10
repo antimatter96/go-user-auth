@@ -5,6 +5,7 @@ import (
   "net/http"
   "github.com/julienschmidt/httprouter"
   "html/template"
+  "github.com/urfave/negroni"
 )
 
 var homeTemplate *template.Template
@@ -21,10 +22,21 @@ func main() {
 	router.GET("/", HomeHandler)
 	router.GET("/login", LoginHandlerGet)
 	router.POST("/login", LoginHandlerPost)
-	http.ListenAndServe(":8080", router)
+	
+	
+	n := negroni.New()
+	
+	logger:= negroni.NewLogger()
+	n.Use(logger)
+	logger.SetFormat("{{.StartTime}} [{{.Status}} {{.Duration}} {{.Method}} {{.Path}} ]")
+	
+	n.UseHandler(router)
+	
+	http.ListenAndServe(":8080", n)
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
+	//fmt.Printf("%+v\n\n",r)
 	homeTemplate.Execute(w, nil)
 }
 
