@@ -1,51 +1,44 @@
 package main
 
 import (
-  "fmt"
-  "net/http"
-  "github.com/julienschmidt/httprouter"
-  "html/template"
-  "github.com/urfave/negroni"
+	"fmt"
+	"html/template"
+	"net/http"
+	"os"
+
+	"./handlers"
+
+	gorillaHandlers "github.com/gorilla/handlers"
+	"github.com/julienschmidt/httprouter"
 )
 
+var fo *os.File
 var homeTemplate *template.Template
-var loginTemplate *template.Template
 
-func init(){
+func init() {
 	homeTemplate = template.Must(template.ParseFiles("./template/home.html"))
-	loginTemplate = template.Must(template.ParseFiles("./template/login.html"))
+	var errCreateFile error
+	fo, errCreateFile = os.Create("output.txt")
+	if errCreateFile != nil {
+		fmt.Println(errCreateFile)
+	}
 	fmt.Println("Yo")
 }
 
 func main() {
 	router := httprouter.New()
 	router.GET("/", HomeHandler)
-	router.GET("/login", LoginHandlerGet)
-	router.POST("/login", LoginHandlerPost)
-	
-	
-	n := negroni.New()
-	
-	logger:= negroni.NewLogger()
-	n.Use(logger)
-	logger.SetFormat("{{.StartTime}} [{{.Status}} {{.Duration}} {{.Method}} {{.Path}} ]")
-	
-	n.UseHandler(router)
-	
-	http.ListenAndServe(":8080", n)
+	router.GET("/login", handlers.LoginHandlerGet)
+	router.POST("/login", handlers.LoginHandlerPost)
+	router.GET("/signup", handlers.SignupHandlerGet)
+	router.POST("/signup", handlers.SignupHandlerPost)
+
+	loggedRouter := gorillaHandlers.LoggingHandler(fo, router)
+
+	http.ListenAndServe(":8080", loggedRouter)
 }
 
-func HomeHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
+func HomeHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	//fmt.Printf("%+v\n\n",r)
-	homeTemplate.Execute(w, nil)
-}
-
-func LoginHandlerGet(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
-	loginTemplate.Execute(w, nil)
-}
-
-func LoginHandlerPost(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
-	r.ParseForm()
-	fmt.Println(r.Form)
 	homeTemplate.Execute(w, nil)
 }
