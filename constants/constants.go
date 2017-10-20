@@ -8,19 +8,23 @@ import (
 	"github.com/spf13/viper"
 )
 
-
+/*
 var ApiLink string
 var RedisAddress string
 var CaptchaSecretKey string
 var CaptchaURL string
-var DBConnectionString string
+
 var CookieHashKey string
 var CookieBlockKey string
 var Port string
 var AllowedHosts []string
+*/
+
+var DBConnectionString string
+var BcryptCost int
 
 func init() {
-	
+
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	errViperRead := viper.ReadInConfig()
@@ -28,13 +32,18 @@ func init() {
 		panic(fmt.Errorf("fatal error config file: %s", errViperRead))
 	}
 
-	ApiLink = viper.GetString("actualApiLink")
-	RedisAddress = viper.GetString("redisAddress")
-	CaptchaSecretKey = viper.GetString("captcha.secret-key")
-	CaptchaURL = viper.GetString("captcha.url")
 	DBConnectionString = viper.GetString("db-connection-string")
-	CookieHashKey = viper.GetString("cookie.hashKey")
-	CookieBlockKey = viper.GetString("cookie.blockKey")
-	Port = viper.GetString("port")
-	AllowedHosts = viper.GetStringSlice("allowed-domains")
+	BcryptCost = viper.GetInt("bcrypt-cost")
+
+	/*
+		ApiLink = viper.GetString("actualApiLink")
+		RedisAddress = viper.GetString("redisAddress")
+		CaptchaSecretKey = viper.GetString("captcha.secret-key")
+		CaptchaURL = viper.GetString("captcha.url")
+
+		CookieHashKey = viper.GetString("cookie.hashKey")
+		CookieBlockKey = viper.GetString("cookie.blockKey")
+		Port = viper.GetString("port")
+		AllowedHosts = viper.GetStringSlice("allowed-domains")
+	*/
 }

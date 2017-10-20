@@ -4,6 +4,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
 	"../constants"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -13,13 +14,13 @@ var db *sql.DB
 
 // These are prepared statements which just need parameters
 // Used to avoid multiple trips to db
-var addTempUser *sql.Stmt
+var addUser *sql.Stmt
 
 func init() {
 	var err error
 	db, err = sql.Open("mysql", constants.DBConnectionString)
 	db.SetMaxIdleConns(1)
-	db.SetMaxOpenConns(5)
+	db.SetMaxOpenConns(3)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -27,11 +28,11 @@ func init() {
 	if err != nil {
 		panic(err.Error())
 	}
-	
-	var errAddTempUser error
-	addTempUser, errAddTempUser = db.Prepare("insert into `users` (`name`,`email`,`organisation`) values (?,?,?)")
-	if errAddTempUser != nil {
-		fmt.Println(errAddTempUser)
+
+	var errAddUser error
+	addUser, errAddUser = db.Prepare("insert into `users` (`email`,`password`) values (?,?)")
+	if errAddUser != nil {
+		fmt.Println(errAddUser)
 	}
 
 }
@@ -44,9 +45,8 @@ func CheckStatus() bool {
 	return true
 }
 
-// AddTempData is called by CaptchaVerify to add the received name and email
-func AddTempData(name, email,org string) bool {
-	_, err := addTempUser.Exec(name, email,org)
+func AddUser(email, password string) bool {
+	_, err := addUser.Exec(email, password)
 	if err != nil {
 		fmt.Println(err)
 		return false
