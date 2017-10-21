@@ -25,7 +25,7 @@ import (
 var signupTemplate *template.Template
 
 func init() {
-	signupTemplate = template.Must(template.ParseFiles("./template/home.html"))
+	signupTemplate = template.Must(template.ParseFiles("./template/signup.html"))
 }
 
 func SignupHandlerGet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -33,6 +33,12 @@ func SignupHandlerGet(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 }
 
 func SignupHandlerPost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	//var passwordPointer *string
+	//var emailPointer *string
+
+	fmt.Println(r.Header.Get("Content-Type"))
+	//fmt.Println(r)
+
 	var receivedData models.SignupData
 	decoderReceivedData := json.NewDecoder(r.Body)
 	errReceivedData := decoderReceivedData.Decode(&receivedData)

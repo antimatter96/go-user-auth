@@ -21,7 +21,7 @@ import (
 var loginTemplate *template.Template
 
 func init() {
-	loginTemplate = template.Must(template.ParseFiles("./template/home.html"))
+	loginTemplate = template.Must(template.ParseFiles("./template/login.html"))
 }
 
 func LoginHandlerGet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

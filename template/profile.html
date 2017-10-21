@@ -9,8 +9,8 @@
 		
 		<br>
 		<form action="login" method ="post">
-			<input name="email" type="email" required>
-			<input name="password" type="password" required>
+			<input name="email">
+			<input name="password">
 			<input type=submit>
 			{{ if .Error }}
 				{{.Error}}

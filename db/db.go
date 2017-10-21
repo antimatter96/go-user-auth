@@ -15,6 +15,7 @@ var db *sql.DB
 // These are prepared statements which just need parameters
 // Used to avoid multiple trips to db
 var addUser *sql.Stmt
+var getPassword *sql.Stmt
 
 func init() {
 	var err error
@@ -34,6 +35,11 @@ func init() {
 	if errAddUser != nil {
 		fmt.Println(errAddUser)
 	}
+	var errGetPassword error
+	getPassword, errGetPassword = db.Prepare("select `password` from `users` where `email` = ?")
+	if errGetPassword != nil {
+		fmt.Println(errGetPassword)
+	}
 
 }
 
@@ -52,4 +58,14 @@ func AddUser(email, password string) bool {
 		return false
 	}
 	return true
+}
+
+func GetPassword(email string) string {
+	var password string
+	err := getPassword.QueryRow(email).Scan(&password)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	return password
 }
