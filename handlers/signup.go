@@ -5,16 +5,13 @@ import (
 	"html/template"
 	"net/http"
 
-	"encoding/json"
-
 	"../constants"
 	"github.com/julienschmidt/httprouter"
 
-	"../models"
-	//"../db"
+	db "../db"
 	//"strings"
 	//"bytes"
-	//"github.com/asaskevich/govalidator"
+	"github.com/asaskevich/govalidator"
 	//"crypto/rand"
 	//"encoding/base64"
 	//"time"
@@ -28,35 +25,76 @@ func init() {
 	signupTemplate = template.Must(template.ParseFiles("./template/signup.html"))
 }
 
+// S
 func SignupHandlerGet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	signupTemplate.Execute(w, nil)
 }
 
+// S
 func SignupHandlerPost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	//var passwordPointer *string
-	//var emailPointer *string
 
-	fmt.Println(r.Header.Get("Content-Type"))
-	//fmt.Println(r)
-
-	var receivedData models.SignupData
-	decoderReceivedData := json.NewDecoder(r.Body)
-	errReceivedData := decoderReceivedData.Decode(&receivedData)
-	defer r.Body.Close()
-	if errReceivedData != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, errReceivedData)
+	errParseForm := r.ParseForm()
+	if errParseForm != nil {
+		fmt.Println(errParseForm)
+		signupTemplate.Execute(w, constErrInternalError)
 		return
 	}
 
-	passwordBytes := []byte(receivedData.Password)
-	fmt.Println(passwordBytes)
+	email := r.FormValue("email")
+	password := r.FormValue("password")
 
-	hashedBytes, err := bcrypt.GenerateFromPassword(passwordBytes, constants.BcryptCost)
-	if err != nil {
-		fmt.Println(err)
+	if email == "" || !govalidator.IsEmail(email) {
+		signupTemplate.Execute(w, constErrEmailMissing)
+		return
 	}
-	hashedString := string(hashedBytes)
+
+	userPresent, errPresent := checkUser(email)
+	if errPresent != nil {
+		signupTemplate.Execute(w, constErrInternalError)
+		return
+	}
+	if userPresent {
+		signupTemplate.Execute(w, constErrEmailTaken)
+		return
+	}
+
+	if password == "" {
+		signupTemplate.Execute(w, constErrPasswordMissing)
+		return
+	}
+
+	hashedString, errBcrypt := getHashedPassword(password)
+	if errBcrypt != nil {
+		signupTemplate.Execute(w, constErrInternalError)
+		return
+	}
 	fmt.Println(hashedString)
-	signupTemplate.Execute(w, nil)
+	userAdded := addUser(email, hashedString)
+	if !userAdded {
+		signupTemplate.Execute(w, constErrInternalError)
+		return
+	}
+	http.Redirect(w, r, "./login?success=true", http.StatusSeeOther)
+}
+
+func getHashedPassword(password string) (string, error) {
+	passwordBytes := []byte(password)
+	hashedBytes, errBcrypt := bcrypt.GenerateFromPassword(passwordBytes, constants.BcryptCost)
+	if errBcrypt != nil {
+		fmt.Println(errBcrypt)
+		return "", errBcrypt
+	}
+	return string(hashedBytes), nil
+}
+
+func checkUser(email string) (bool, error) {
+	present, err := db.CheckUser(email)
+	if err != nil {
+		return true, err
+	}
+	return present, nil
+}
+
+func addUser(email, password string) bool {
+	return db.AddUser(email, password)
 }

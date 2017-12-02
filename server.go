@@ -33,6 +33,8 @@ func main() {
 	router.GET("/signup", handlers.SignupHandlerGet)
 	router.POST("/signup", handlers.SignupHandlerPost)
 
+	router.ServeFiles("/static/*filepath", http.Dir("./template/static/"))
+
 	loggedRouter := gorillaHandlers.LoggingHandler(fo, router)
 
 	http.ListenAndServe(":8080", loggedRouter)
