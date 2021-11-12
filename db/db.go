@@ -16,6 +16,7 @@ var db *sql.DB
 // Used to avoid multiple trips to db
 var addUser *sql.Stmt
 var getPassword *sql.Stmt
+var checkUserStmt *sql.Stmt
 
 func init() {
 	var err error
@@ -35,10 +36,17 @@ func init() {
 	if errAddUser != nil {
 		fmt.Println(errAddUser)
 	}
+
 	var errGetPassword error
 	getPassword, errGetPassword = db.Prepare("select `password` from `users` where `email` = ?")
 	if errGetPassword != nil {
 		fmt.Println(errGetPassword)
+	}
+
+	var errCheckUser error
+	checkUserStmt, errCheckUser = db.Prepare("select `id` from `users` where `email` = ?")
+	if errCheckUser != nil {
+		fmt.Println(errCheckUser)
 	}
 
 }
@@ -60,12 +68,31 @@ func AddUser(email, password string) bool {
 	return true
 }
 
-func GetPassword(email string) string {
+func GetPasswordHash(email string) (string, error) {
 	var password string
 	err := getPassword.QueryRow(email).Scan(&password)
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		if err.Error() == "sql: no rows in result set" {
+			return "-", err
+		}
+		return "", err
 	}
-	return password
+	return password, nil
+}
+
+func CheckUser(email string) (bool, error) {
+	var userId int
+	err := checkUserStmt.QueryRow(email).Scan(&userId)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return false, nil
+		}
+		fmt.Println(err)
+		return false, err
+
+	}
+	if userId == 0 {
+		return false, nil
+	}
+	return true, nil
 }
